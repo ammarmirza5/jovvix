@@ -29,7 +29,7 @@ services:
       - REDIS_DATABASES=0
 
   minio:
-    image: quay.io/minio/minio
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z  # official MinIO images were removed from quay.io and Docker Hub
     ports:
       - "9000:9000"
       - "9001:9001"
