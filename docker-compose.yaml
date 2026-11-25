@@ -51,6 +51,19 @@ services:
     restart: on-failure
     env_file:
       - ./api/.env.docker
+    # Values come from the root .env (Dokploy "Environment" tab); defaults are for local dev.
+    environment:
+      IS_DEVELOPMENT: ${IS_DEVELOPMENT:-true}
+      DEBUG: ${DEBUG:-true}
+      WEB_URL: ${WEB_URL:-http://127.0.0.1:5000}
+      JWT_SECRET: ${JWT_SECRET:-ThisIsKey}
+      ISSUER: ${JWT_ISSUER:-quiz.docker.com}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-test@test.com}
+      PUBLIC_QUIZ_ADMIN_EMAILS: ${PUBLIC_QUIZ_ADMIN_EMAILS:-}
     depends_on:
       - kratos
       - db
@@ -67,6 +80,11 @@ services:
     restart: on-failure
     env_file:
       - ./app/.env.docker
+    environment:
+      NUXT_PUBLIC_BASE_URL: ${WEB_URL:-http://127.0.0.1:5000}
+      NUXT_PUBLIC_API_URL: ${API_URL:-http://127.0.0.1:3000/api/v1}
+      NUXT_PUBLIC_API_SOCKET_URL: ${API_SOCKET_URL:-ws://127.0.0.1:3000/api/v1/socket}
+      NUXT_PUBLIC_KRATOS_URL: ${KRATOS_PUBLIC_URL:-http://127.0.0.1:4433}
     depends_on:
       - api
 
@@ -88,6 +106,30 @@ services:
       - "4434:${SERVE_ADMIN_PORT:-4434}" # admin
     env_file:
       - ./api/.env.kratos
+    # Overrides kratos.yml so the same file works locally and in production.
+    environment:
+      SERVE_PUBLIC_BASE_URL: ${KRATOS_PUBLIC_URL:-http://127.0.0.1:4433}/
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: ${WEB_URL:-http://127.0.0.1:5000}
+      SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: ${WEB_URL:-http://127.0.0.1:5000}
+      SELFSERVICE_ALLOWED_RETURN_URLS: ${WEB_URL:-http://127.0.0.1:5000}
+      SELFSERVICE_METHODS_OIDC_CONFIG_BASE_REDIRECT_URI: ${KRATOS_PUBLIC_URL:-http://127.0.0.1:4433}
+      SELFSERVICE_FLOWS_ERROR_UI_URL: ${WEB_URL:-http://127.0.0.1:5000}/error
+      SELFSERVICE_FLOWS_SETTINGS_UI_URL: ${WEB_URL:-http://127.0.0.1:5000}/account/change-password
+      SELFSERVICE_FLOWS_RECOVERY_UI_URL: ${WEB_URL:-http://127.0.0.1:5000}/recovery
+      SELFSERVICE_FLOWS_VERIFICATION_UI_URL: ${WEB_URL:-http://127.0.0.1:5000}/verification
+      SELFSERVICE_FLOWS_VERIFICATION_AFTER_DEFAULT_BROWSER_RETURN_URL: ${WEB_URL:-http://127.0.0.1:5000}/account/login
+      SELFSERVICE_FLOWS_LOGOUT_AFTER_DEFAULT_BROWSER_RETURN_URL: ${WEB_URL:-http://127.0.0.1:5000}/account/login
+      SELFSERVICE_FLOWS_LOGIN_UI_URL: ${WEB_URL:-http://127.0.0.1:5000}/account/login
+      SELFSERVICE_FLOWS_LOGIN_AFTER_DEFAULT_BROWSER_RETURN_URL: ${API_URL:-http://127.0.0.1:3000/api/v1}/kratos/auth
+      SELFSERVICE_FLOWS_REGISTRATION_UI_URL: ${WEB_URL:-http://127.0.0.1:5000}/account/register
+      SELFSERVICE_FLOWS_REGISTRATION_AFTER_DEFAULT_BROWSER_RETURN_URL: ${API_URL:-http://127.0.0.1:3000/api/v1}/kratos/auth
+      COOKIES_DOMAIN: ${COOKIE_DOMAIN:-127.0.0.1}
+      SECRETS_COOKIE: ${KRATOS_COOKIE_SECRET:-PLEASE-CHANGE-ME-I-AM-VERY-INSECURE}
+      SECRETS_CIPHER: ${KRATOS_CIPHER_SECRET:-32-LONG-SECRET-NOT-SECURE-AT-ALL}
+      COURIER_SMTP_CONNECTION_URI: ${KRATOS_SMTP_URI:-smtp://mailpit:1025/?skip_ssl_verify=true&disable_starttls=true}
+      COURIER_SMTP_FROM_ADDRESS: ${EMAIL_FROM:-test@test.com}
+      LOG_LEVEL: ${KRATOS_LOG_LEVEL:-debug}
+      LOG_LEAK_SENSITIVE_VALUES: ${KRATOS_LEAK_SENSITIVE_VALUES:-true}
     command: serve -c /etc/config/kratos/kratos.yml --watch-courier
     restart: always
     depends_on:
